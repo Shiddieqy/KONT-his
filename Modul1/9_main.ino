@@ -4,7 +4,7 @@ int InputSerial = 0;
 float Motor = 0.0;
 float Poten1, Poten2, Tacho1, Tacho2;
 unsigned long TotalTime = 0;
-int set_poins[5] = {50,20,50,90,20};
+int set_poins[19] = {10,0,20,0,30,0,40,0,50,0,60,0,70,0,80,0,90,0,100};
 bool isrun =0;
 
 void setup() {
@@ -17,10 +17,12 @@ void setup() {
   InputSerial = 0;
   unsigned long TotalTime = 0;
 }
+
 float compensated = 0;
 int  counter = 0;
 int  increment = 1;
 int pidval = 0;
+float fsfval = 0;
 float potn2 = 0;
 float seq = 0;
 void loop() {
@@ -37,7 +39,7 @@ void loop() {
     Poten2 = smooth_position_percentage() + 100*seq;
     Tacho1 = sample_velocity_percentage();
     Tacho2 = smooth_velocity_percentage();
-    if(Poten2 < potn2-70 ){
+    if(Poten2 < potn2-70){
       seq+=1;
       Poten2 = smooth_position_percentage() + 100*seq;
     }
@@ -45,61 +47,38 @@ void loop() {
       seq-=1;
       Poten2 = smooth_position_percentage() + 100*seq;
     }
-//    TotalTime = TimeSampling + TotalTime;
-//    if (TotalTime >= 5000) {
-//      if (InputSerial == 1){
-//         isrun = 1;
-//      }
-//      InputSerial = set_poins[counter];
-//      counter++;
-//      if(counter>4){
-//        counter =0;
-//      }
-//      TotalTime = 0;
-//    }
     if (Motor<0){
       Tacho2 = -1*Tacho2;
     }
-    // compensated = compensate(InputSerial);
-    // Motor = run_motor(compensated);
-    pidval = calc_pid(InputSerial, Poten2);
-    compensated = compensate(pidval);
+    // pidval = calc_pid(InputSerial, Poten2);
+    TotalTime = TimeSampling + TotalTime;
+   if (TotalTime >= 5000) {
+     InputSerial = set_poins[counter];
+     counter++;
+     if(counter>19){
+       counter =0;
+     }
+     TotalTime = 0;
+   }
+    fsfval = calc_fsf(Poten2,Tacho2,InputSerial);
+    compensated = compensation(fsfval);
     Motor = run_motor((float) compensated);
-//    Serial.print(Time - StartTime - TimeSampling);
-//    Serial.print("\t");
-//    Serial.print(DeltaTime);
-//    Serial.print("\t");
     Serial.print(InputSerial);
     Serial.print("\t");
     Serial.print(Motor);
     Serial.print("\t");
-    Serial.print(Poten1);
+    Serial.print(fsfval);
     Serial.print("\t");
-    Serial.print(Poten2);
+    Serial.print(Poten2*0.05);
+    Serial.print("\t");
+    Serial.print(Tacho2);
+    Serial.print("\t");
+    Serial.print(sum-sumt);
+    Serial.print("\t");
+    Serial.print(InputSerial-Tacho2);
     Serial.println("\t");
-    // Serial.print(Tacho1);
-//    Serial.print(Tacho2);
-//    Serial.print("\t");
-////    Serial.print(prop);
-////    Serial.print("\t");
-////        Serial.print(integral);
-////    Serial.print("\t");
-////        Serial.print(difference);
-////    Serial.print("\t");
-//      Serial.println(res);
+    // Serial.print(Poten1);
     // Serial.print("\t");
-//    counter++;
-//    if (counter>=40){
-//      counter = 0;
-////      Motor = run_motor(0);
-//      delay(500);
-//      InputSerial+= increment;
-//      if(abs(InputSerial)>100){
-//        increment = -1*increment;
-//        InputSerial =0;
-//      }
-//    }
-//    }
   }
 }
 
